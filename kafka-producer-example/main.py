@@ -29,8 +29,11 @@ def main():
                 value=json.dumps(weather),
             )
             logging.info("Produced. Sleeping...")
-            time.sleep(60)  # Sleep for 60 seconds
+            time.sleep(15)  # Sleep for 60 seconds
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass

@@ -1,66 +1,74 @@
-# python-kafka-exploration
-Exploring Kafka
+# python-kafka-exploration: Running Examples & Practical Kafka Tips
 
-This repository contains multiple examples demonstrating how to use Kafka with Python.
+This repo is a collection of hands-on Kafka experiments in Python. Each folder is a standalone example. The goal is to make it easy to run, debug, and learn from real Kafka usage.
 
-## Structure
+## How to Run Any Example
 
-- `writing-to-kafka-example/`: Example of streaming weather data to Kafka using Python and Docker Compose.
-	 - `main.py`: Python script that fetches weather data and produces it to a Kafka topic.
-	 - `kafka-local/docker-compose.yml`: Docker Compose file to run a local Kafka broker using Bitnami's Kafka image.
-	 - `start_kafka_and_app.sh`: Bash script to start Kafka and run the Python app.
-- More example folders coming soon!
+1. **Start Kafka**
+   - From repo root, run:
+     ```bash
+     cd kafka-local
+     docker-compose up -d
+     ```
+   - This launches a local Kafka broker (KRaft mode, no Zookeeper).
 
-## writing-to-kafka-example
+2. **Run an Example**
+   - Go into the example folder (e.g. `writing-to-kafka-example`):
+     ```bash
+     cd writing-to-kafka-example
+     bash start_kafka_and_app.sh
+     ```
+   - Each example has its own script and code.
 
-### How It Works
+3. **Stop Kafka**
+   - From repo root:
+     ```bash
+     cd kafka-local
+     docker-compose down
+     ```
 
-1. **Kafka Setup**: The `docker-compose.yml` file sets up a single-node Kafka broker using KRaft mode (no Zookeeper required). It exposes Kafka on port 9092 and auto-creates topics as needed.
-2. **Weather Data Producer**: The `main.py` script uses the [Open-Meteo API](https://open-meteo.com/) to fetch current temperature data for London. It then produces this data to the Kafka topic `weather_data_demo` every 60 seconds using the `quixstreams` library.
-3. **Startup Script**: The `start_kafka_and_app.sh` script automates the process:
-	 - Starts Kafka using Docker Compose.
-	 - Waits for Kafka to be ready.
-	 - Runs the Python producer app.
+## Useful Kafka Findings & Debugging Tips
 
-### Prerequisites
+### kcat: The Best CLI for Kafka
 
-- Docker and Docker Compose installed
-- Python 3.7+
-- Required Python packages: `requests`, `quixstreams`
+- Install with Homebrew: `brew install kcat`
+- Consume messages:
+  ```bash
+  kcat -b localhost:9092 -t weather_data_demo -C
+  ```
+- Produce messages:
+  ```bash
+  echo '{"test": "message"}' | kcat -b localhost:9092 -t weather_data_demo -P
+  ```
+- See topic metadata:
+  ```bash
+  kcat -b localhost:9092 -L
+  ```
 
-### Getting Started
+### Other Useful CLI Commands
 
-1. **Install Python dependencies**
-	```bash
-	pip install requests quixstreams
-	```
-2. **Start Kafka and the app**
-	```bash
-	cd writing-to-kafka-example
-	bash start_kafka_and_app.sh
-	```
-3. **Observe Output**
-	- The app will log weather data fetched and produced to Kafka every minute.
-	- Kafka runs locally and can be accessed on `localhost:9092`.
+- List all topics:
+  ```bash
+  kcat -b localhost:9092 -L | grep 'topic '
+  ```
+- Check if Kafka is running:
+  ```bash
+  nc -z localhost 9092 && echo "Kafka is up!" || echo "Kafka is down!"
+  ```
 
-### Customization
+### General Tips
 
-- Change the location in `main.py` by modifying the latitude/longitude in the API request.
-- Adjust the topic name or message frequency as needed.
+- If you get connection errors, check Docker is running and port 9092 is open.
+- If a topic doesn't exist, Kafka auto-creates it (see docker-compose config).
+- You can change the topic name or message format in each example's Python code.
 
-### Stopping Kafka
+## Example Folders
 
-To stop the Kafka service:
-```bash
-cd kafka-local
-docker-compose down
-```
+- `kafka-local/`: Shared Kafka deployment for all examples.
 
-### Troubleshooting
+- `writing-to-kafka-example/`: Streams weather data to Kafka using Python and Docker Compose.
+  - `main.py`: Python producer for weather data.
+  - `start_kafka_and_app.sh`: Script to start Kafka and run the app.
 
-- Ensure Docker is running before starting the script.
-- If you encounter connection issues, verify that port 9092 is available and not blocked by a firewall.
 
-## License
-
-MIT License
+More examples coming soon!
